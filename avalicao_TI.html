@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Maturidade Tecnológica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+
+        <!-- Cabeçalho -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Diagnóstico Rápido de Maturidade Tecnológica</h1>
+            <p class="mt-2 text-slate-600">Avalie o nível de maturidade da sua empresa em 20 perguntas.</p>
+        </header>
+
+        <!-- Seção do Questionário -->
+        <div id="questionnaireSection" class="fade-in">
+            <form id="techMaturityForm" class="space-y-8">
+                <!-- As perguntas serão injetadas aqui pelo JavaScript -->
+            </form>
+            <div class="mt-10 text-center">
+                <button id="submitButton" type="button" class="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                    Ver meu Resultado
+                </button>
+            </div>
+        </div>
+
+        <!-- Seção de Resultados (inicialmente oculta) -->
+        <div id="resultsSection" class="hidden fade-in">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-900 mb-6">Seu Diagnóstico está Pronto!</h2>
+
+                <div class="text-center bg-slate-100 p-6 rounded-xl mb-8">
+                    <p class="text-lg text-slate-600">Sua pontuação de maturidade é:</p>
+                    <p id="totalScore" class="text-5xl sm:text-6xl font-extrabold text-indigo-600 my-2">0/80</p>
+                    <div class="w-full bg-slate-200 rounded-full h-4 mt-4">
+                        <div id="scoreBar" class="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <!-- Gráfico -->
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                         <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Maturidade por Área</h3>
+                        <canvas id="maturityChart"></canvas>
+                    </div>
+
+                    <!-- Problemas Urgentes -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Plano de Ação Urgente
+                        </h3>
+                        <p class="text-slate-600 mb-4">Com base nas suas respostas, estes são os pontos mais críticos que merecem atenção imediata:</p>
+                        <ul id="urgentIssues" class="space-y-3 list-disc list-inside text-slate-700">
+                           <!-- Itens de urgência serão injetados aqui -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-10 text-center">
+                    <button id="redoButton" type="button" class="bg-slate-200 text-slate-800 font-semibold py-3 px-8 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition">
+                        Refazer Diagnóstico
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                // Seção 1: Fundamentos e Pessoas
+                { id: 1, theme: 'Fundamentos e Pessoas', text: 'Existem regras claras (mesmo que informais) sobre como usar a tecnologia da empresa? (Ex: o que não pode ser instalado, sites proibidos, etc).', urgency_tip: 'Defina regras básicas de uso da tecnologia. Crie um documento simples sobre o que pode e não pode ser feito nos computadores da empresa.' },
+                { id: 2, theme: 'Fundamentos e Pessoas', text: 'Os colaboradores recebem alguma orientação sobre segurança? (Ex: como identificar e-mails falsos/phishing, importância de senhas seguras).', urgency_tip: 'Promova uma breve orientação sobre segurança. Alerte sobre e-mails falsos e a importância de não clicar em links suspeitos.' },
+                { id: 3, theme: 'Fundamentos e Pessoas', text: 'Os funcionários e principais parceiros assinam algum termo de confidencialidade para proteger as informações da sua empresa?', urgency_tip: 'Implemente um Termo de Confidencialidade (NDA) para todos os colaboradores e parceiros. Modelos simples estão disponíveis online.' },
+                // Seção 2: Equipamentos e Acessos
+                { id: 4, theme: 'Equipamentos e Acessos', text: 'A empresa sabe exatamente quais computadores, notebooks e celulares corporativos estão com quem?', urgency_tip: 'Crie um inventário simples (pode ser uma planilha) listando todos os equipamentos e quem é o responsável por cada um.' },
+                { id: 5, theme: 'Equipamentos e Acessos', text: 'Quando um funcionário é contratado ou demitido, existe um processo para criar e (o mais importante) remover todos os seus acessos?', urgency_tip: 'Crie um checklist de entrada e saída de funcionários. Garantir a remoção de todos os acessos na saída é CRÍTICO para a segurança.' },
+                { id: 6, theme: 'Equipamentos e Acessos', text: 'A empresa exige o uso de senhas fortes nos sistemas? (Ex: trocas periódicas, mínimo de caracteres).', urgency_tip: 'Ative a política de senhas fortes nos seus principais sistemas (e-mail, ERP). A maioria dos serviços já oferece essa opção.' },
+                { id: 7, theme: 'Equipamentos e Acessos', text: 'A empresa utiliza "Verificação em Duas Etapas" (MFA) para acessar os principais sistemas (e-mail, sistema financeiro)?', urgency_tip: 'Ative a Verificação em Duas Etapas (MFA) em todas as contas possíveis, começando pelo e-mail dos administradores. Isso é uma das barreiras mais eficazes contra invasões.' },
+                { id: 8, theme: 'Equipamentos e Acessos', text: 'Se os funcionários usam seus próprios equipamentos para o trabalho (BYOD), existe alguma regra para proteger os dados da empresa?', urgency_tip: 'Defina regras mínimas para uso de equipamentos pessoais, como a obrigatoriedade de ter um antivírus atualizado e tela de bloqueio com senha.' },
+                // Seção 3: Proteção e Defesa
+                { id: 9, theme: 'Proteção e Defesa', text: 'Todos os computadores da empresa possuem um antivírus profissional (pago e gerenciado) instalado e atualizado?', urgency_tip: 'Instale um antivírus profissional em TODAS as máquinas. Soluções gratuitas não oferecem o gerenciamento e a proteção necessários para um ambiente de negócios.' },
+                { id: 10, theme: 'Proteção e Defesa', text: 'A rede do escritório é protegida por um firewall além do roteador padrão da operadora?', urgency_tip: 'Considere investir em um firewall de rede. Ele oferece uma camada de proteção vital contra ameaças externas da internet.' },
+                { id: 11, theme: 'Proteção e Defesa', text: 'Os dados mais importantes da empresa possuem uma rotina de backup automática e regular?', urgency_tip: 'Implemente uma rotina de backup AUTOMÁTICA imediatamente. Dados perdidos podem quebrar um negócio. Use soluções em nuvem para maior segurança.' },
+                { id: 12, theme: 'Proteção e Defesa', text: 'Esse backup é testado de vez em quando para garantir que os dados podem ser recuperados?', urgency_tip: 'Teste seus backups periodicamente. Um backup que não funciona é o mesmo que não ter backup.' },
+                { id: 13, theme: 'Proteção e Defesa', text: 'Os notebooks da empresa usam criptografia de disco para proteção em caso de roubo ou perda?', urgency_tip: 'Ative a criptografia de disco (BitLocker no Windows, FileVault no Mac) em todos os notebooks. É um recurso nativo e protege os dados em caso de perda ou roubo.' },
+                // Seção 4: Continuidade e Riscos
+                { id: 14, theme: 'Continuidade e Riscos', text: 'A empresa tem um "Plano B" básico caso um desastre aconteça (Ex: ataque de ransomware, alagamento)?', urgency_tip: 'Desenvolva um plano de recuperação simples. Defina quem contatar, onde estão os backups e quais são os sistemas prioritários para restabelecer.' },
+                { id: 15, theme: 'Continuidade e Riscos', text: 'Se um funcionário perceber um vírus ou vazamento de dados, ele sabe para quem ligar ou o que fazer imediatamente?', urgency_tip: 'Defina e comunique um ponto de contato claro para emergências de segurança. Agilidade na resposta pode minimizar drasticamente os danos.' },
+                { id: 16, theme: 'Continuidade e Riscos', text: 'A empresa avalia a segurança dos seus principais fornecedores de tecnologia (sistema de gestão, e-mail, etc)?', urgency_tip: 'Questione seus fornecedores sobre as práticas de segurança deles. A segurança do seu negócio também depende da segurança deles.' },
+                // Seção 5: Privacidade de Dados (LGPD)
+                { id: 17, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa sabe quais dados pessoais (de clientes e funcionários) ela coleta, por que coleta e onde eles ficam guardados?', urgency_tip: 'Faça um mapeamento dos dados pessoais que sua empresa trata. Entender o que você tem é o primeiro passo para a conformidade com a LGPD.' },
+                { id: 18, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa tem um canal para clientes pedirem para ver ou apagar seus dados (Direito do Titular)?', urgency_tip: 'Crie um canal de comunicação para atender aos direitos dos titulares (pode ser um e-mail específico). Responda às solicitações para evitar multas.' },
+                { id: 19, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa tem uma rotina para apagar dados pessoais que não são mais necessários (respeitando prazos legais)?', urgency_tip: 'Estabeleça uma política de retenção e descarte de dados. Guardar dados desnecessários aumenta os riscos e pode violar a LGPD.' },
+                { id: 20, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa se preocupa se seus principais fornecedores (contabilidade, marketing) também estão adequados à LGPD?', urgency_tip: 'Verifique a conformidade de seus fornecedores com a LGPD. Inclua cláusulas sobre proteção de dados nos contratos.' },
+            ];
+
+            const options = [
+                { label: 'Não (Não temos)', value: 0 },
+                { label: 'Em Planejamento', value: 1 },
+                { label: 'Parcialmente', value: 2 },
+                { label: 'Sim (Definido)', value: 4 },
+                { label: 'Não Sei / Não se Aplica', value: 0 }
+            ];
+            
+            const form = document.getElementById('techMaturityForm');
+            const submitButton = document.getElementById('submitButton');
+            const redoButton = document.getElementById('redoButton');
+            const questionnaireSection = document.getElementById('questionnaireSection');
+            const resultsSection = document.getElementById('resultsSection');
+            let maturityChart = null;
+
+            // Agrupar questões por tema
+            const questionsByTheme = questions.reduce((acc, q) => {
+                if (!acc[q.theme]) {
+                    acc[q.theme] = [];
+                }
+                acc[q.theme].push(q);
+                return acc;
+            }, {});
+
+            // Renderizar o formulário
+            for (const theme in questionsByTheme) {
+                const themeContainer = document.createElement('div');
+                themeContainer.className = 'bg-white p-6 rounded-2xl shadow-lg';
+
+                const themeTitle = document.createElement('h2');
+                themeTitle.className = 'text-xl font-bold text-indigo-700 mb-6 border-b pb-3';
+                themeTitle.textContent = theme;
+                themeContainer.appendChild(themeTitle);
+
+                const questionsContainer = document.createElement('div');
+                questionsContainer.className = 'space-y-6';
+
+                questionsByTheme[theme].forEach((q, index) => {
+                    const questionBlock = document.createElement('div');
+                    questionBlock.className = 'question-block';
+
+                    const questionText = document.createElement('p');
+                    questionText.className = 'font-semibold text-slate-800 mb-3';
+                    questionText.textContent = `${q.id}. ${q.text}`;
+                    questionBlock.appendChild(questionText);
+
+                    const optionsContainer = document.createElement('div');
+                    optionsContainer.className = 'flex flex-wrap gap-x-6 gap-y-3';
+                    options.forEach(opt => {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center space-x-2 text-slate-600 cursor-pointer';
+
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = `question_${q.id}`;
+                        radio.value = opt.value;
+                        radio.required = true;
+                        radio.className = 'form-radio h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500';
+
+                        const span = document.createElement('span');
+                        span.textContent = opt.label;
+
+                        label.appendChild(radio);
+                        label.appendChild(span);
+                        optionsContainer.appendChild(label);
+                    });
+                    questionBlock.appendChild(optionsContainer);
+                    questionsContainer.appendChild(questionBlock);
+                });
+                
+                themeContainer.appendChild(questionsContainer);
+                form.appendChild(themeContainer);
+            }
+
+            // Função para calcular os resultados
+            const calculateResults = () => {
+                if (!form.checkValidity()) {
+                    alert('Por favor, responda a todas as perguntas para ver o resultado.');
+                    return;
+                }
+
+                let totalScore = 0;
+                const themeScores = {};
+                const urgentIssuesList = [];
+
+                questions.forEach(q => {
+                    const selected = form.querySelector(`input[name="question_${q.id}"]:checked`);
+                    if (selected) {
+                        const value = parseInt(selected.value);
+                        totalScore += value;
+
+                        if (!themeScores[q.theme]) {
+                            themeScores[q.theme] = { score: 0, maxScore: 0 };
+                        }
+                        themeScores[q.theme].score += value;
+                        themeScores[q.theme].maxScore += 4; // Max score for each question is 4
+
+                        if (value === 0) { // "Não" or "Não sei"
+                            urgentIssuesList.push(q.urgency_tip);
+                        }
+                    }
+                });
+
+                displayResults(totalScore, themeScores, urgentIssuesList);
+            };
+
+            // Função para exibir os resultados
+            const displayResults = (score, themes, issues) => {
+                questionnaireSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                window.scrollTo(0, 0);
+
+                // Score total
+                document.getElementById('totalScore').textContent = `${score}/80`;
+                const percentage = (score / 80) * 100;
+                const scoreBar = document.getElementById('scoreBar');
+                setTimeout(() => { // Timeout para animar a barra
+                     scoreBar.style.width = `${percentage}%`;
+                }, 100);
+
+                // Lista de problemas urgentes
+                const urgentIssuesContainer = document.getElementById('urgentIssues');
+                urgentIssuesContainer.innerHTML = '';
+                if (issues.length > 0) {
+                    issues.forEach(issue => {
+                        const li = document.createElement('li');
+                        li.textContent = issue;
+                        urgentIssuesContainer.appendChild(li);
+                    });
+                } else {
+                     const li = document.createElement('li');
+                     li.className = 'text-green-600 font-semibold';
+                     li.textContent = 'Parabéns! Nenhum ponto crítico de alta urgência foi identificado. Continue mantendo as boas práticas!';
+                     urgentIssuesContainer.appendChild(li);
+                }
+
+                // Gráfico de Maturidade
+                const ctx = document.getElementById('maturityChart').getContext('2d');
+                const themeLabels = Object.keys(themes);
+                const themeData = themeLabels.map(label => {
+                    const theme = themes[label];
+                    return (theme.score / theme.maxScore) * 100;
+                });
+                
+                if(maturityChart) {
+                    maturityChart.destroy();
+                }
+
+                maturityChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: themeLabels.map(l => l.replace(' (LGPD)', '')),
+                        datasets: [{
+                            label: 'Maturidade (%)',
+                            data: themeData,
+                            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                            borderColor: 'rgb(79, 70, 229)',
+                            pointBackgroundColor: 'rgb(79, 70, 229)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(79, 70, 229)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: true
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 100,
+                                pointLabels: {
+                                    font: {
+                                        size: 11
+                                    }
+                                },
+                                ticks: {
+                                    backdropColor: 'rgba(255, 255, 255, 0.75)',
+                                    stepSize: 25
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                        }
+                    }
+                });
+            };
+
+            const resetForm = () => {
+                form.reset();
+                resultsSection.classList.add('hidden');
+                questionnaireSection.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            };
+
+            submitButton.addEventListener('click', calculateResults);
+            redoButton.addEventListener('click', resetForm);
+        });
+    </script>
+</body>
+</html>
