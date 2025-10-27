@@ -140,7 +140,7 @@
                 { label: 'Em Planejamento', value: 1 },
                 { label: 'Parcialmente', value: 2 },
                 { label: 'Sim (Definido)', value: 4 },
-                { label: 'Não Sei / Não se Aplica', value: 0 }
+                { label: 'Não Sei / Não se Aplica', value: -1 }
             ];
             
             const form = document.getElementById('techMaturityForm');
@@ -212,6 +212,7 @@
                 }
 
                 let totalScore = 0;
+                let maxPossibleScore = 0;
                 const themeScores = {};
                 const urgentIssuesList = [];
 
@@ -219,30 +220,38 @@
                     const selected = form.querySelector(`input[name="question_${q.id}"]:checked`);
                     if (selected) {
                         const value = parseInt(selected.value);
+
+                        if (value === -1) {
+                            return; // Ignora a pontuação para "Não se Aplica"
+                        }
+
                         totalScore += value;
+                        maxPossibleScore += 4; // Cada questão aplicável vale no máximo 4
+
                         if (!themeScores[q.theme]) {
                             themeScores[q.theme] = { score: 0, maxScore: 0 };
                         }
                         themeScores[q.theme].score += value;
                         themeScores[q.theme].maxScore += 4;
+
                         if (value === 0) {
                             urgentIssuesList.push(q.urgency_tip);
                         }
                     }
                 });
 
-                displayResults(totalScore, themeScores, urgentIssuesList);
+                displayResults(totalScore, maxPossibleScore, themeScores, urgentIssuesList);
             };
 
-            const displayResults = (score, themes, issues) => {
+            const displayResults = (score, maxScore, themes, issues) => {
                 questionnaireSection.classList.add('hidden');
                 resultsSectionWrapper.classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 document.getElementById('resultCompanyName').textContent = companyNameInput.value;
-                document.getElementById('totalScore').textContent = `${score}/80`;
+                document.getElementById('totalScore').textContent = `${score}/${maxScore}`;
                 
-                const percentage = (score / 80) * 100;
+                const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
                 const scoreBar = document.getElementById('scoreBar');
                 setTimeout(() => { scoreBar.style.width = `${percentage}%`; }, 100);
 
