@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnóstico de Maturidade Tecnológica</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- MODIFICADO: Trocada a biblioteca de PDF pela de Imagem -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    <!-- Google Fonts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,867 +21,342 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Loader para o botão */
-        .loader {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Estilo para erro de validação */
-        .validation-error {
-            border: 2px solid #ef4444; /* Borda vermelha */
-        }
-        /* Estilos personalizados para os botões de rádio */
-        input[type="radio"]:checked {
-            background-color: #3b82f6;
-        }
-        input[type="radio"]:checked + label {
-            color: #111827;
-            font-weight: 500;
-        }
-        /* Nova classe para guiar o PDF */
-        .pdf-avoid-break {
-            page-break-inside: avoid !important;
+        /* Ajuste para quebra de página no PDF */
+        .page-break-inside-avoid {
+            page-break-inside: avoid;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-slate-50 text-slate-800">
 
-    <div class="container mx-auto max-w-4xl p-4 sm:p-8">
-        
+    <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+
         <!-- Cabeçalho -->
-        <header class="bg-white p-8 rounded-lg shadow-lg mb-8 fade-in">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Diagnóstico de Maturidade Tecnológica</h1>
-            <p class="mt-2 text-lg text-gray-600">Avalie a maturidade da sua PME em tecnologia e segurança.</p>
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Diagnóstico Rápido de Maturidade Tecnológica</h1>
+            <p class="mt-2 text-slate-600">Avalie o nível de maturidade da sua empresa.</p>
         </header>
 
-        <!-- Container do Formulário e Resultados -->
-        <div id="app-container">
-
-            <!-- Formulário -->
-            <form id="questionnaire-form" class="bg-white p-8 rounded-lg shadow-lg fade-in space-y-8">
-                
-                <!-- Seção de Identificação -->
-                <section id="company-section">
-                    <h2 class="text-2xl font-semibold text-gray-800 border-b pb-4">Seção 1: Identificação</h2>
-                    <div class="mt-6 space-y-4">
-                        <!-- Campo Nome da Empresa -->
-                        <div>
-                            <label for="company-name" class="block text-lg font-medium text-gray-700 mb-2">Nome da Empresa</label>
-                            <input type="text" id="company-name" name="company-name" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg">
-                            <p id="company-name-error" class="text-red-600 text-sm mt-2 hidden">Por favor, preencha o nome da empresa.</p>
-                        </div>
-                        <!-- Campo Seu Nome -->
-                        <div>
-                            <label for="contact-name" class="block text-lg font-medium text-gray-700 mb-2">Seu Nome</label>
-                            <input type="text" id="contact-name" name="contact-name" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg">
-                            <p id="contact-name-error" class="text-red-600 text-sm mt-2 hidden">Por favor, preencha seu nome.</p>
-                        </div>
-                        <!-- Campo Seu E-mail -->
-                        <div>
-                            <label for="contact-email" class="block text-lg font-medium text-gray-700 mb-2">Seu E-mail</label>
-                            <input type="email" id="contact-email" name="contact-email" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg">
-                            <p id="contact-email-error" class="text-red-600 text-sm mt-2 hidden">Por favor, preencha um e-mail válido.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Perguntas serão injetadas aqui -->
-                <div id="questions-container" class="space-y-10"></div>
-                
-                <!-- Mensagem de Erro Geral -->
-                <div id="validation-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md fade-in">
-                    <p class="font-bold">Ops!</p>
-                    <p>Parece que você esqueceu de responder algo. Por favor, revise os campos e seções destacadas.</p>
+        <!-- Seção do Questionário -->
+        <div id="questionnaireSection" class="fade-in">
+            <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+                <h2 class="text-xl font-bold text-indigo-700 mb-4 border-b pb-3">Informações Iniciais</h2>
+                <div>
+                    <label for="companyName" class="block font-semibold text-slate-800 mb-2">Nome da Empresa:</label>
+                    <input type="text" id="companyName" name="companyName" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Digite o nome da sua empresa" required>
                 </div>
+            </div>
 
-                <!-- Botão de Envio -->
-                <div class="pt-6 border-t border-gray-200 text-right">
-                    <button type="button" id="submit-button" class="inline-flex items-center justify-center bg-blue-600 text-white text-lg font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300">
-                        <span id="submit-button-text">Ver meu Resultado</span>
-                        <div id="submit-loader" class="loader hidden"></div>
-                    </button>
-                </div>
+            <form id="techMaturityForm" class="space-y-8">
+                <!-- As perguntas serão injetadas aqui pelo JavaScript -->
             </form>
 
-            <!-- Resultados -->
-            <div id="results-container" class="hidden fade-in space-y-8">
-                
-                <!-- Wrapper para PDF -->
-                <div id="pdf-content">
-                    <!-- Adicionada a classe pdf-avoid-break -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg pdf-avoid-break">
-                        <h2 class="text-3xl font-bold text-gray-900 border-b pb-4">Seu Diagnóstico de Maturidade</h2>
-                        <p class="mt-4 text-xl text-gray-600">Resultados para: <span id="company-name-result" class="font-semibold"></span></p>
-                        <p class="text-lg text-gray-600">Enviado por: <span id="contact-name-result" class="font-semibold"></span> (<span id="contact-email-result" class="font-semibold"></span>)</p>
+            <div id="validationMessage" class="hidden text-center text-red-600 font-semibold my-6 p-3 bg-red-100 rounded-lg"></div>
+
+            <div class="mt-10 text-center">
+                <button id="submitButton" type="button" class="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                    Ver meu Resultado
+                </button>
+            </div>
+        </div>
+
+        <!-- Seção de Resultados (inicialmente oculta) -->
+        <div id="resultsSectionWrapper" class="hidden fade-in">
+            <div id="resultsSection" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-900 mb-6">Seu Diagnóstico para <span id="resultCompanyName" class="text-indigo-600">sua Empresa</span> está Pronto!</h2>
+
+                <div class="text-center bg-slate-100 p-6 rounded-xl mb-8 page-break-inside-avoid">
+                    <p class="text-lg text-slate-600">Sua pontuação de maturidade é:</p>
+                    <p id="totalScore" class="text-5xl sm:text-6xl font-extrabold text-indigo-600 my-2">0/0</p>
+                    <div class="w-full bg-slate-200 rounded-full h-4 mt-4">
+                        <div id="scoreBar" class="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-4">
+                        <p id="maturityLevel" class="inline-block px-4 py-1 text-sm font-bold rounded-full"></p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <!-- Gráfico -->
+                    <div class="bg-slate-50 p-4 rounded-xl page-break-inside-avoid">
+                         <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Maturidade por Área</h3>
+                        <canvas id="maturityChart"></canvas>
                     </div>
 
-                    <!-- Pontuação Total -->
-                    <!-- Adicionada a classe pdf-avoid-break -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg flex flex-col items-center justify-center text-center mt-8 pdf-avoid-break">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Pontuação Geral</h3>
-                        <div id="score-badge" class="w-48 h-48 rounded-full flex items-center justify-center text-white text-6xl font-bold transition-all duration-500">
-                            <span id="total-score">0</span>
-                        </div>
-                        <p class="mt-4 text-3xl font-bold" id="maturity-level-text"></p>
-                        <p class="text-lg text-gray-600 mt-2 px-4" id="maturity-description"></p>
-                    </div>
-                    
-                    <!-- Gráfico Radar -->
-                    <!-- Adicionada a classe pdf-avoid-break -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg mt-8 pdf-avoid-break">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Maturidade por Área</h3>
-                        <!-- Container do gráfico com altura responsiva -->
-                        <div class="relative h-96 md:h-[450px]">
-                            <canvas id="radar-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Ações Urgentes -->
-                    <!-- Adicionada a classe pdf-avoid-break -->
-                    <div class="bg-white p-8 rounded-lg shadow-lg mt-8 pdf-avoid-break">
-                        <h3 class="text-2xl font-semibold text-gray-800 mb-6 border-b pb-4">Plano de Ação Urgente</h3>
-                        <p class="mb-6 text-lg text-gray-600">Com base nas suas respostas, estes são os pontos mais críticos que precisam de atenção imediata:</p>
-                        <ul id="urgent-actions-list" class="space-y-4">
-                            <!-- JS injeta itens aqui -->
+                    <!-- Problemas Urgentes -->
+                    <div class="page-break-inside-avoid">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Plano de Ação Urgente
+                        </h3>
+                        <p class="text-slate-600 mb-4">Com base nas suas respostas, estes são os pontos mais críticos que merecem atenção imediata:</p>
+                        <ul id="urgentIssues" class="space-y-3 text-slate-700 text-sm">
+                           <!-- Itens de urgência serão injetados aqui -->
                         </ul>
-                        <p id="no-urgent-actions" class="hidden text-green-700 font-semibold text-lg">Parabéns! Nenhum item de alta urgência foi identificado.</p>
                     </div>
                 </div>
-
-                <!-- Botões de Ação (Fora do PDF/Imagem) -->
-                <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
-                    <button id="download-image-button" class="inline-flex items-center justify-center bg-green-600 text-white text-lg font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-300">
-                        <!-- Ícone de Imagem SVG (MODIFICADO para Seta de Download) -->
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Baixar Resultado
-                    </button>
-                    <button id="redo-button" class="inline-flex items-center justify-center bg-gray-600 text-white text-lg font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300">
-                        <!-- Ícone de Recomeçar SVG -->
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2m0 0H15"></path></svg>
-                        Refazer
-                    </button>
+                
+                <div class="mt-8 text-xs text-slate-400 text-center">
+                    Relatório gerado automaticamente pelo Diagnóstico de Maturidade Tecnológica.
                 </div>
+            </div>
+             <div id="resultsButtons" class="mt-8 text-center flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="downloadPdfButton" type="button" class="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                    Baixar Resultado em PDF
+                </button>
+                <button id="redoButton" type="button" class="bg-slate-200 text-slate-800 font-semibold py-3 px-8 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition">
+                    Refazer Diagnóstico
+                </button>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                // Seção 1: Fundamentos e Pessoas
+                { id: 1, theme: 'Fundamentos e Pessoas', text: 'Existem regras claras (mesmo que informais) sobre como usar a tecnologia da empresa? (Ex: o que não pode ser instalado, sites proibidos, etc).', urgency_tip: 'Defina regras básicas de uso da tecnologia. Crie um documento simples sobre o que pode e não pode ser feito nos computadores da empresa.' },
+                { id: 2, theme: 'Fundamentos e Pessoas', text: 'Os colaboradores recebem alguma orientação sobre segurança? (Ex: como identificar e-mails falsos/phishing, importância de senhas seguras).', urgency_tip: 'Promova uma breve orientação sobre segurança. Alerte sobre e-mails falsos e a importância de não clicar em links suspeitos.' },
+                { id: 3, theme: 'Fundamentos e Pessoas', text: 'Os funcionários e principais parceiros assinam algum termo de confidencialidade para proteger as informações da sua empresa?', urgency_tip: 'Implemente um Termo de Confidencialidade (NDA) para todos os colaboradores e parceiros. Modelos simples estão disponíveis online.' },
+                { id: 21, theme: 'Fundamentos e Pessoas', text: 'A empresa possui licenças originais e válidas para todos os softwares instalados (Windows, Office, etc)?', urgency_tip: 'Realize uma auditoria de software. O uso de software não licenciado ("pirata") gera riscos legais graves e é uma porta comum para vírus.' },
+                { id: 29, theme: 'Fundamentos e Pessoas', text: 'Os computadores são configurados para bloquear a tela automaticamente após um tempo sem uso?', urgency_tip: 'Configure o bloqueio automático de tela (ex: 5 minutos). Isso evita que visitantes ou pessoas não autorizadas acessem dados se o funcionário sair da mesa.' },
 
-            // !!! CONFIGURAÇÃO !!!
-            // Insira a URL do seu Google Apps Script (v4) aqui.
-            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRDI63koU0XhGKnwWwnbcbowS5BUItt27eRHhj_i9e1JvkTB_txLAZ8i8MUASoEbfSDA/exec"; // EX: "https://script.google.com/macros/s/..."
+                // Seção 2: Equipamentos e Acessos
+                { id: 4, theme: 'Equipamentos e Acessos', text: 'A empresa sabe exatamente quais computadores, notebooks e celulares corporativos estão com quem?', urgency_tip: 'Crie um inventário simples (pode ser uma planilha) listando todos os equipamentos e quem é o responsável por cada um.' },
+                { id: 5, theme: 'Equipamentos e Acessos', text: 'Quando um funcionário é contratado ou demitido, existe um processo para criar e (o mais importante) remover todos os seus acessos?', urgency_tip: 'Crie um checklist de entrada e saída de funcionários. Garantir a remoção de todos os acessos na saída é CRÍTICO para a segurança.' },
+                { id: 6, theme: 'Equipamentos e Acessos', text: 'A empresa exige o uso de senhas fortes nos sistemas? (Ex: trocas periódicas, mínimo de caracteres).', urgency_tip: 'Ative a política de senhas fortes nos seus principais sistemas (e-mail, ERP). A maioria dos serviços já oferece essa opção.' },
+                { id: 7, theme: 'Equipamentos e Acessos', text: 'A empresa utiliza "Verificação em Duas Etapas" (MFA) para acessar os principais sistemas (e-mail, sistema financeiro)?', urgency_tip: 'Ative a Verificação em Duas Etapas (MFA) em todas as contas possíveis, começando pelo e-mail dos administradores. Isso é uma das barreiras mais eficazes contra invasões.' },
+                { id: 8, theme: 'Equipamentos e Acessos', text: 'Se os funcionários usam seus próprios equipamentos para o trabalho (BYOD), existe alguma regra para proteger os dados da empresa?', urgency_tip: 'Defina regras mínimas para uso de equipamentos pessoais, como a obrigatoriedade de ter um antivírus atualizado e tela de bloqueio com senha.' },
+                { id: 22, theme: 'Equipamentos e Acessos', text: 'Os computadores e sistemas são configurados para realizar atualizações automáticas de segurança?', urgency_tip: 'Ative as atualizações automáticas do sistema operacional e softwares. Sistemas desatualizados são a vulnerabilidade mais explorada por hackers.' },
 
-            // --- Estrutura das Perguntas ---
-            const questionData = [
-                // SEÇÕES 2-6 RESTAURADAS (MENOS DUPLICATAS)
-                {
-                    title: "Seção 2: Fundamentos e Pessoas",
-                    questions: [
-                        { 
-                            id: "q1", text: "Regras de Uso", 
-                            description: "Existem regras claras (mesmo que informais) sobre como usar a tecnologia da empresa? (Ex: o que não pode ser instalado, sites proibidos, como tratar dados de clientes).", 
-                            weight: 1, urgentIf: [0, 1]
-                        },
-                        { 
-                            id: "q2", text: "Treinamento/Orientação", 
-                            description: "Os colaboradores recebem alguma orientação sobre segurança? (Ex: como identificar e-mails falsos/phishing, importância de senhas seguras).", 
-                            weight: 2, urgentIf: [0]
-                        },
-                        { 
-                            id: "q3", text: "Confidencialidade", 
-                            description: "Os funcionários e principais parceiros (contabilidade, marketing) assinam algum termo de confidencialidade?", 
-                            weight: 1, urgentIf: [0, 1]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 3: Equipamentos e Acessos",
-                    questions: [
-                        // Q4 (Controle de Equipamentos) foi removida, substituída pela Q32 (Gestão de Ativos)
-                        { 
-                            id: "q5", text: "Controle de Contas (Entrada/Saída)", 
-                            description: "Quando um funcionário é contratado ou demitido, existe um processo para criar e (o mais importante) remover todos os seus acessos?", 
-                            weight: 3, urgentIf: [0, 1]
-                        },
-                        { 
-                            id: "q6", text: "Política de Senhas", 
-                            description: "A empresa exige o uso de senhas fortes nos sistemas? (Ex: trocas periódicas, mínimo de caracteres, não usar '123456').", 
-                            weight: 2, urgentIf: [0]
-                        },
-                        // Q7 (Verificação em Duas Etapas) foi removida, substituída pela Q23 (Segurança de Acesso ao E-mail)
-                        { 
-                            id: "q8", text: "Uso de Equipamento Pessoal (BYOD)", 
-                            description: "Se os funcionários usam seus próprios celulares ou computadores para acessar dados da empresa, existe alguma regra para proteger esses dados?", 
-                            weight: 1, urgentIf: [0]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 4: Proteção e Defesa",
-                    questions: [
-                        // Q9 (Antivírus) foi removida, substituída pela Q27 (Gerenciamento de Antivírus)
-                        // Q10 (Firewall) foi removida, substituída pela Q28 (Proteção da Rede)
-                        { 
-                            id: "q11", text: "Backup (Cópia de Segurança)", 
-                            description: "Os dados e arquivos mais importantes da empresa (servidores, planilhas financeiras, dados de clientes) possuem uma rotina de backup automática e regular?", 
-                            weight: 3, urgentIf: [0, 1]
-                        },
-                        { 
-                            id: "q12", text: "Teste de Backup", 
-                            description: "Esse backup é testado de vez em quando para garantir que os dados podem ser recuperados se algo der errado?", 
-                            weight: 2, urgentIf: [0]
-                        },
-                        { 
-                            id: "q13", text: "Criptografia (Proteção contra roubo)", 
-                            description: "Os notebooks da empresa usam criptografia de disco? (Tecnologia que embaralha os dados para que ninguém acesse se o notebook for perdido ou roubado).", 
-                            weight: 1, urgentIf: [0]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 5: Continuidade e Riscos",
-                    questions: [
-                        { 
-                            id: "q14", text: "Plano de Recuperação", 
-                            description: "A empresa tem um 'Plano B' básico caso um desastre aconteça? (Ex: Se o escritório alagar, ou se um vírus grave (ransomware) bloquear todos os computadores).", 
-                            weight: 2, urgentIf: [0, 1]
-                        },
-                        { 
-                            id: "q15", text: "Resposta a Incidentes", 
-                            description: "Se um funcionário perceber um vírus ou um vazamento de dados, ele sabe para quem ligar ou o que fazer imediatamente?", 
-                            weight: 2, urgentIf: [0]
-                        },
-                        { 
-                            id: "q16", text: "Gestão de Fornecedores", 
-                            description: "A empresa avalia a segurança dos seus principais fornecedores de tecnologia (ex: o sistema de gestão/ERP, o provedor de e-mail)?", 
-                            weight: 1, urgentIf: [0]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 6: Privacidade de Dados (LGPD)",
-                    questions: [
-                        { 
-                            id: "q17", text: "Mapeamento de Dados", 
-                            description: "A empresa sabe quais dados pessoais (de clientes e funcionários) ela coleta, por que coleta e onde eles ficam guardados?", 
-                            weight: 1, urgentIf: [0, 1]
-                        },
-                        { 
-                            id: "q18", text: "Atendimento ao Titular (LGPD)", 
-                            description: "A empresa tem um canal (ex: um e-mail) para clientes pedirem para ver ou apagar seus dados? A empresa sabe como atender a esse pedido?", 
-                            weight: 1, urgentIf: [0]
-                        },
-                        { 
-                            id: "q19", text: "Término de Uso (Descarte)", 
-                            description: "A empresa tem uma rotina para apagar dados pessoais de clientes antigos ou ex-funcionários que não são mais necessários (respeitando os prazos da lei)?", 
-                            weight: 1, urgentIf: [0]
-                        },
-                        { 
-                            id: "q20", text: "Fornecedores e LGPD", 
-                            description: "A empresa se preocupa se seus principais fornecedores (ex: contabilidade, marketing, sistema de RH) também estão adequados à LGPD?", 
-                            weight: 1, urgentIf: [0]
-                        }
-                    ]
-                },
-                // SEÇÕES 7-11 QUE JÁ ESTAVAM
-                {
-                    title: "Seção 7: E-mail e Colaboração",
-                    questions: [
-                        { 
-                            id: "q21", text: "Plataforma de E-mail", 
-                            description: "Qual plataforma de e-mail e calendário a sua empresa utiliza hoje?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [
-                                { label: "Contas pessoais gratuitas (ex: @gmail.com, @hotmail.com)", value: 0 },
-                                { label: "E-mail da hospedagem do site (ex: Locaweb, GoDaddy)", value: 1 },
-                                { label: "Temos um servidor próprio de e-mail (ex: Exchange local)", value: 2 },
-                                { label: "Já usamos uma suíte profissional (Google Workspace ou Microsoft 365)", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q22", text: "Armazenamento de Arquivos", 
-                            description: "Onde os arquivos e planilhas mais importantes da empresa (financeiro, contratos) são armazenados?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [
-                                { label: "No computador de uma ou duas pessoas-chave", value: 0 },
-                                { label: "Em um servidor de arquivos local (no escritório)", value: 1 },
-                                { label: "Em contas pessoais de nuvem (ex: Dropbox/Google Drive gratuito)", value: 1 },
-                                { label: "Em uma solução de nuvem corporativa (OneDrive, Google Drive, SharePoint)", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q23", text: "Segurança de Acesso ao E-mail", 
-                            description: "A empresa exige 'Verificação em Duas Etapas' (MFA) para acessar o e-mail?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [ // Esta é uma re-leitura da q7, mas com opções diferentes
-                                { label: "Não, não usamos.", value: 0 },
-                                { label: "É opcional, usa quem quer.", value: 1 },
-                                { label: "Sim, é obrigatório para todos.", value: 3 },
-                                { label: "Não sei do que se trata.", value: 0 }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 8: Infraestrutura e Sistemas", // MODIFICADO
-                    questions: [
-                        { 
-                            id: "q24", text: "Hospedagem do Sistema Principal (ERP/Gestão)", 
-                            description: "Onde o sistema principal da sua empresa (ERP, sistema de gestão, banco de dados) está hospedado?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [
-                                { label: "Em um computador/servidor físico aqui no escritório", value: 0 },
-                                { label: "Em uma 'hospedagem/VPS' simples (ex: Locaweb, Hostinger)", value: 1 },
-                                { label: "Não sei / A empresa que fez o software cuida disso", value: 0 },
-                                { label: "Já estamos em uma nuvem pública (Azure, AWS, Google Cloud)", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q25", text: "Backup do Servidor", 
-                            description: "Sua rotina de backup (cópia de segurança) do servidor principal é automatizada e armazenada fora do escritório (na nuvem)?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [
-                                { label: "Não fazemos backup do servidor.", value: 0 },
-                                { label: "Fazemos backup manual em um HD externo/pen drive.", value: 1 },
-                                { label: "O backup é automático, mas fica no mesmo servidor/escritório.", value: 1 },
-                                { label: "Sim, o backup é automático e vai para a nuvem.", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q26", text: "Tempo de Recuperação (RTO)", 
-                            description: "Se o seu servidor principal parar de funcionar AGORA (queimar, ransomware), em quanto tempo a empresa volta a operar 100%?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [
-                                { label: "Não temos ideia / Provavelmente dias ou semanas", value: 0 },
-                                { label: "Levaria de 1 a 2 dias para o técnico arrumar", value: 1 },
-                                { label: "Temos um plano e voltamos em algumas horas", value: 2 },
-                                { label: "Temos alta disponibilidade e não paramos", value: 3 }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 9: Segurança Avançada", // MODIFICADO
-                    questions: [
-                        { 
-                            id: "q27", text: "Gerenciamento de Antivírus", 
-                            description: "Como sua empresa gerencia o antivírus dos computadores?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [ // Substitui a q9
-                                { label: "Não temos um padrão / Usamos versões gratuitas (Avast, AVG)", value: 0 },
-                                { label: "Compramos licenças pagas, mas cada um instala o seu", value: 1 },
-                                { label: "Temos uma solução com console central de gerenciamento", value: 3 },
-                                { label: "Confiamos apenas no Windows Defender padrão", value: 0 }
-                            ]
-                        },
-                        { 
-                            id: "q28", text: "Proteção da Rede (Firewall)", 
-                            description: "Qual equipamento protege a conexão de internet do seu escritório?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [ // Substitui a q10
-                                { label: "O roteador que a operadora (Vivo/Claro) instalou", value: 0 },
-                                { label: "Um roteador Wi-Fi comum que compramos (TP-Link, D-Link)", value: 1 },
-                                { label: "Temos um equipamento de Firewall profissional (SonicWall, Fortinet, etc.)", value: 3 },
-                                { label: "Não temos escritório (somos 100% remotos)", value: 3 } // Considerado maduro neste contexto
-                            ]
-                        },
-                        { 
-                            id: "q29", text: "Acesso Remoto Seguro", 
-                            description: "Quando um funcionário precisa acessar os sistemas da empresa de casa, como ele faz?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [
-                                { label: "Usamos programas como TeamViewer ou AnyDesk", value: 1 },
-                                { label: "Abrimos 'portas' no roteador (Acesso RDP)", value: 0 },
-                                { label: "Temos uma VPN (Rede Privada Virtual) segura", value: 3 },
-                                { label: "Nossos sistemas são 100% nuvem (não precisa de VPN)", value: 3 }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 10: Suporte e Operação", // MODIFICADO
-                    questions: [
-                        { 
-                            id: "q30", text: "Suporte de TI (Helpdesk)", 
-                            description: "Quando um problema de tecnologia acontece (impressora para, sistema não abre), quem resolve?", 
-                            weight: 3, urgentIf: [0, 1],
-                            options: [
-                                { label: "Nós mesmos tentamos resolver ('fuçamos', Google)", value: 0 },
-                                { label: "Temos um 'técnico de confiança' que cobra por visita", value: 1 },
-                                { label: "Temos um funcionário que 'quebra o galho' e cuida da TI", value: 1 },
-                                { label: "Temos um contrato de suporte (Outsourcing / MSP)", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q31", text: "Modelo de Suporte", 
-                            description: "Seu suporte de TI atual atua de forma proativa (monitorando, prevenindo problemas) ou apenas reativa ('quando quebra')?", 
-                            weight: 2, urgentIf: [0],
-                            options: [
-                                { label: "Apenas reativa (só ligamos quando dá problema)", value: 0 },
-                                { label: "Ele diz que é proativo, mas não temos certeza", value: 1 },
-                                { label: "Sim, recebemos relatórios e eles previnem problemas", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q32", text: "Gestão de Ativos (Inventário)", 
-                            description: "Você sabe exatamente quais computadores sua empresa tem, a idade deles, e quando precisam ser trocados?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [ // Substitui a q4
-                                { label: "Não temos esse controle, trocamos 'quando quebra'", value: 0 },
-                                { label: "Temos uma planilha, mas está desatualizada", value: 1 },
-                                { label: "Temos um sistema/parceiro que gerencia isso ativamente", value: 3 }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    title: "Seção 11: Presença Web", // MODIFICADO
-                    questions: [
-                        { 
-                            id: "q33", text: "Hospedagem do Site", 
-                            description: "Onde o site principal (institucional ou e-commerce) da sua empresa está hospedado hoje?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [
-                                { label: "Em um provedor de hospedagem compartilhada (Locaweb, Hostgator, etc.)", value: 1 },
-                                { label: "Em uma plataforma 'Faça-você-mesmo' (Wix, Loja Integrada, etc.)", value: 1 },
-                                { label: "Não sei / A agência de marketing que cuida", value: 0 },
-                                { label: "Em um servidor dedicado ou nuvem (AWS, Google Cloud, Azure)", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q34", text: "Segurança do Site (WordPress)", 
-                            description: "Com que frequência o seu site e seus plugins (especialmente se for WordPress) são atualizados para corrigir falhas de segurança?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [
-                                { label: "Nunca ou quase nunca, 'se está funcionando, não mexemos'", value: 0 },
-                                { label: "Apenas quando o site quebra ou apresenta um problema", value: 1 },
-                                { label: "Não sei / Acredito que a agência faça isso", value: 1 },
-                                { label: "Temos um processo (ou parceiro) que atualiza semanalmente", value: 3 }
-                            ]
-                        },
-                        { 
-                            id: "q35", text: "Suporte do Site", 
-                            description: "Se o seu site sair do ar ou ficar muito lento AGORA, quem é o responsável por resolver e em quanto tempo?", 
-                            weight: 2, urgentIf: [0, 1],
-                            options: [
-                                { label: "Eu mesmo tento 'fuçar' ou abro um ticket e espero 24h", value: 0 },
-                                { label: "Tento ligar para o provedor (e fico na fila de espera)", value: 1 },
-                                { label: "Temos um parceiro com tempo de resposta (SLA) definido", value: 3 }
-                            ]
-                        }
-                    ]
-                }
+                // Seção 3: Proteção e Defesa
+                { id: 9, theme: 'Proteção e Defesa', text: 'Todos os computadores da empresa possuem um antivírus profissional (pago e gerenciado) instalado e atualizado?', urgency_tip: 'Instale um antivírus profissional em TODAS as máquinas. Soluções gratuitas não oferecem o gerenciamento e a proteção necessários para um ambiente de negócios.' },
+                { id: 10, theme: 'Proteção e Defesa', text: 'A rede do escritório é protegida por um firewall além do roteador padrão da operadora?', urgency_tip: 'Considere investir em um firewall de rede. Ele oferece uma camada de proteção vital contra ameaças externas da internet.' },
+                { id: 26, theme: 'Proteção e Defesa', text: 'Existe uma rede Wi-Fi separada exclusiva para visitantes, isolada da rede principal da empresa?', urgency_tip: 'Crie uma rede "Guest" (Visitante) no seu roteador Wi-Fi. Nunca forneça a senha da rede principal, onde trafegam dados críticos, para visitantes.' },
+                { id: 11, theme: 'Proteção e Defesa', text: 'Os dados mais importantes da empresa possuem uma rotina de backup automática e regular?', urgency_tip: 'Implemente uma rotina de backup AUTOMÁTICA imediatamente. Dados perdidos podem quebrar um negócio. Use soluções em nuvem para maior segurança.' },
+                { id: 12, theme: 'Proteção e Defesa', text: 'Esse backup é testado de vez em quando para garantir que os dados podem ser recuperados?', urgency_tip: 'Teste seus backups periodicamente. Um backup que não funciona é o mesmo que não ter backup.' },
+                { id: 13, theme: 'Proteção e Defesa', text: 'Os notebooks da empresa usam criptografia de disco para proteção em caso de roubo ou perda?', urgency_tip: 'Ative a criptografia de disco (BitLocker no Windows, FileVault no Mac) em todos os notebooks. É um recurso nativo e protege os dados em caso de perda ou roubo.' },
+                { id: 23, theme: 'Proteção e Defesa', text: 'Existe um controle ou bloqueio sobre o uso de dispositivos USB (Pen drives, HDs externos) nos computadores da empresa?', urgency_tip: 'Considere bloquear ou monitorar portas USB para evitar o vazamento de dados por funcionários ou a entrada de vírus via Pen Drive infectado.' },
+                { id: 25, theme: 'Proteção e Defesa', text: 'Além do backup na empresa, existe uma cópia dos dados salva em um local externo ou na nuvem (Backup Off-site)?', urgency_tip: 'Adote a regra de backup 3-2-1: tenha pelo menos uma cópia dos dados FORA da empresa (nuvem) para proteção total contra roubo físico ou incêndio.' },
+
+                // Seção 4: Continuidade e Riscos
+                { id: 14, theme: 'Continuidade e Riscos', text: 'A empresa tem um "Plano B" básico caso um desastre aconteça (Ex: ataque de ransomware, alagamento)?', urgency_tip: 'Desenvolva um plano de recuperação simples. Defina quem contatar, onde estão os backups e quais são os sistemas prioritários para restabelecer.' },
+                { id: 15, theme: 'Continuidade e Riscos', text: 'Se um funcionário perceber um vírus ou vazamento de dados, ele sabe para quem ligar ou o que fazer imediatamente?', urgency_tip: 'Defina e comunique um ponto de contato claro para emergências de segurança. Agilidade na resposta pode minimizar drasticamente os danos.' },
+                { id: 16, theme: 'Continuidade e Riscos', text: 'A empresa avalia a segurança dos seus principais fornecedores de tecnologia (sistema de gestão, e-mail, etc)?', urgency_tip: 'Questione seus fornecedores sobre as práticas de segurança deles. A segurança do seu negócio também depende da segurança deles.' },
+                { id: 24, theme: 'Continuidade e Riscos', text: 'Existe um contrato formal com uma empresa ou profissional de TI que garanta atendimento rápido (SLA) em caso de problemas?', urgency_tip: 'Formalize o suporte de TI. Depender de ajuda informal ("sobrinho") coloca o negócio em risco em momentos críticos.' },
+                { id: 27, theme: 'Continuidade e Riscos', text: 'Os servidores ou equipamentos principais ficam em local seguro (trancado) e climatizado (ar condicionado)?', urgency_tip: 'Proteja fisicamente seus servidores. Mantenha-os em local trancado (acesso restrito) e com temperatura controlada para evitar falhas por superaquecimento.' },
+                { id: 28, theme: 'Continuidade e Riscos', text: 'A empresa possui Nobreaks ou geradores para manter os equipamentos ligados em caso de falta de energia?', urgency_tip: 'Instale Nobreaks nos equipamentos críticos (servidores, roteadores). Quedas bruscas de energia podem corromper dados e queimar equipamentos.' },
+
+                // Seção 5: Privacidade de Dados (LGPD)
+                { id: 17, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa sabe quais dados pessoais (de clientes e funcionários) ela coleta, por que coleta e onde eles ficam guardados?', urgency_tip: 'Faça um mapeamento dos dados pessoais que sua empresa trata. Entender o que você tem é o primeiro passo para a conformidade com a LGPD.' },
+                { id: 18, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa tem um canal para clientes pedirem para ver ou apagar seus dados (Direito do Titular)?', urgency_tip: 'Crie um canal de comunicação para atender aos direitos dos titulares (pode ser um e-mail específico). Responda às solicitações para evitar multas.' },
+                { id: 19, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa tem uma rotina para apagar dados pessoais que não são mais necessários (respeitando prazos legais)?', urgency_tip: 'Estabeleça uma política de retenção e descarte de dados. Guardar dados desnecessários aumenta os riscos e pode violar a LGPD.' },
+                { id: 20, theme: 'Privacidade de Dados (LGPD)', text: 'A empresa se preocupa se seus principais fornecedores (contabilidade, marketing) também estão adequados à LGPD?', urgency_tip: 'Verifique a conformidade de seus fornecedores com a LGPD. Inclua cláusulas sobre proteção de dados nos contratos.' },
             ];
 
-            // Opções padrão para perguntas de 1 a 20
-            const standardOptions = [
-                { label: "Não (Não temos)", value: 0 },
-                { label: "Em Planejamento", value: 1 },
-                { label: "Parcialmente", value: 2 },
-                { label: "Sim (Definido)", value: 3 }
+            const options = [
+                { label: 'Não (Não temos)', value: 0 },
+                { label: 'Em Planejamento', value: 1 },
+                { label: 'Parcialmente', value: 2 },
+                { label: 'Sim (Definido)', value: 4 },
+                { label: 'Não Sei / Não se Aplica', value: 0 }
             ];
-
-            // --- Seletores de DOM ---
-            const form = document.getElementById('questionnaire-form');
-            const questionsContainer = document.getElementById('questions-container');
-            const submitButton = document.getElementById('submit-button');
-            const submitButtonText = document.getElementById('submit-button-text');
-            const submitLoader = document.getElementById('submit-loader');
-            const validationError = document.getElementById('validation-error');
             
-            // Campos de Identificação
-            const companyNameInput = document.getElementById('company-name');
-            const contactNameInput = document.getElementById('contact-name');
-            const contactEmailInput = document.getElementById('contact-email');
-            const companyNameError = document.getElementById('company-name-error');
-            const contactNameError = document.getElementById('contact-name-error');
-            const contactEmailError = document.getElementById('contact-email-error');
-            const companySection = document.getElementById('company-section');
+            const form = document.getElementById('techMaturityForm');
+            const submitButton = document.getElementById('submitButton');
+            const redoButton = document.getElementById('redoButton');
+            const downloadPdfButton = document.getElementById('downloadPdfButton');
+            const questionnaireSection = document.getElementById('questionnaireSection');
+            const resultsSectionWrapper = document.getElementById('resultsSectionWrapper');
+            const companyNameInput = document.getElementById('companyName');
+            const validationMessage = document.getElementById('validationMessage');
+            let maturityChart = null;
+            const maxTotalScore = questions.length * 4; // Dynamic max score
 
-            // Campos de Resultado
-            const resultsContainer = document.getElementById('results-container');
-            const scoreBadge = document.getElementById('score-badge');
-            const totalScoreElem = document.getElementById('total-score');
-            const maturityLevelText = document.getElementById('maturity-level-text');
-            const maturityDescription = document.getElementById('maturity-description');
-            const companyNameResult = document.getElementById('company-name-result');
-            const contactNameResult = document.getElementById('contact-name-result');
-            const contactEmailResult = document.getElementById('contact-email-result');
-            const urgentActionsList = document.getElementById('urgent-actions-list');
-            const noUrgentActions = document.getElementById('no-urgent-actions');
-            const redoButton = document.getElementById('redo-button');
-            // MODIFICADO: O seletor do botão mudou
-            const downloadImageButton = document.getElementById('download-image-button');
-            
-            let radarChart = null;
-            let totalMaxScore = 0;
-            let totalQuestions = 0;
+            const questionsByTheme = questions.reduce((acc, q) => {
+                if (!acc[q.theme]) { acc[q.theme] = []; }
+                acc[q.theme].push(q);
+                return acc;
+            }, {});
 
-            // --- Funções ---
+            for (const theme in questionsByTheme) {
+                const themeContainer = document.createElement('div');
+                themeContainer.className = 'bg-white p-6 rounded-2xl shadow-lg';
 
-            // (Função isValidEmail removida)
+                const themeTitle = document.createElement('h2');
+                themeTitle.className = 'text-xl font-bold text-indigo-700 mb-6 border-b pb-3';
+                themeTitle.textContent = theme;
+                themeContainer.appendChild(themeTitle);
 
-            // Função para injetar as perguntas no HTML
-            function injectQuestions() {
-                questionData.forEach((section, sectionIndex) => {
-                    let sectionHtml = `
-                        <section id="section-${sectionIndex}" class="pt-6 border-t border-gray-200">
-                            <h2 class="text-2xl font-semibold text-gray-800 mb-6">${section.title}</h2>
-                            <div class="space-y-8">
-                    `;
-                    
-                    section.questions.forEach(q => {
-                        const questionOptions = q.options || standardOptions;
-                        const maxOptionValue = questionOptions[questionOptions.length - 1].value;
-                        totalMaxScore += maxOptionValue * q.weight;
-                        totalQuestions++;
-                        
-                        sectionHtml += `
-                            <fieldset class="p-6 border border-gray-200 rounded-lg" id="fieldset-${q.id}">
-                                <legend class="text-lg font-medium text-gray-900 px-2">${q.text}</legend>
-                                <p class="text-base text-gray-600 mb-5 mt-2 px-2">${q.description}</p>
-                                <div class="space-y-3 pl-2">
-                        `;
+                const questionsContainer = document.createElement('div');
+                questionsContainer.className = 'space-y-6';
 
-                        questionOptions.forEach(opt => {
-                            sectionHtml += `
-                                <div class="flex items-center">
-                                    <input id="${q.id}-${opt.value}" name="${q.id}" type="radio" value="${opt.value}" class="h-5 w-5 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                    <label for="${q.id}-${opt.value}" class="ml-3 block text-base text-gray-700">${opt.label}</label>
-                                </div>
-                            `;
-                        });
+                questionsByTheme[theme].forEach((q) => {
+                    const questionBlock = document.createElement('div');
+                    const questionText = document.createElement('p');
+                    questionText.className = 'font-semibold text-slate-800 mb-3';
+                    questionText.textContent = `${q.id}. ${q.text}`;
+                    questionBlock.appendChild(questionText);
 
-                        sectionHtml += `</div></fieldset>`;
+                    const optionsContainer = document.createElement('div');
+                    optionsContainer.className = 'flex flex-wrap gap-x-6 gap-y-3';
+                    options.forEach(opt => {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center space-x-2 text-slate-600 cursor-pointer';
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = `question_${q.id}`;
+                        radio.value = opt.value;
+                        radio.required = true;
+                        radio.className = 'form-radio h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500';
+                        const span = document.createElement('span');
+                        span.textContent = opt.label;
+                        label.appendChild(radio);
+                        label.appendChild(span);
+                        optionsContainer.appendChild(label);
                     });
-
-                    sectionHtml += `</div></section>`;
-                    questionsContainer.innerHTML += sectionHtml;
+                    questionBlock.appendChild(optionsContainer);
+                    questionsContainer.appendChild(questionBlock);
                 });
-            }
-
-            // Função para validar o formulário
-            function validateForm() {
-                let isValid = true;
-
-                // Limpa erros anteriores
-                validationError.classList.add('hidden');
-                companyNameError.classList.add('hidden');
-                contactNameError.classList.add('hidden');
-                contactEmailError.classList.add('hidden');
-                companyNameInput.classList.remove('validation-error');
-                contactNameInput.classList.remove('validation-error');
-                contactEmailInput.classList.remove('validation-error');
-                document.querySelectorAll('fieldset').forEach(fs => fs.classList.remove('validation-error'));
-
-                // Valida nome da empresa
-                if (companyNameInput.value.trim() === "") {
-                    companyNameInput.classList.add('validation-error');
-                    companyNameError.classList.remove('hidden');
-                    isValid = false;
-                }
                 
-                // Valida e-mail de contato (MODIFICADO: Apenas checa se está vazio)
-                if (contactEmailInput.value.trim() === "") {
-                    contactEmailInput.classList.add('validation-error');
-                    contactEmailError.textContent = "Por favor, preencha seu e-mail."; // Mensagem ajustada
-                    contactEmailError.classList.remove('hidden');
-                    isValid = false;
-                }
-
-                // Valida perguntas
-                questionData.forEach(section => {
-                    section.questions.forEach(q => {
-                        const answer = form.querySelector(`input[name="${q.id}"]:checked`);
-                        if (!answer) {
-                            isValid = false;
-                            document.getElementById(`fieldset-${q.id}`).classList.add('validation-error');
-                        }
-                    });
-                });
-
-                if (!isValid) {
-                    validationError.classList.remove('hidden');
-                    const firstError = document.querySelector('.validation-error');
-                    if (firstError) {
-                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                    return false;
-                }
-                return true;
+                themeContainer.appendChild(questionsContainer);
+                form.appendChild(themeContainer);
             }
 
-            // Função para calcular os resultados
-            function calculateResults() {
-                if (!validateForm()) return;
-
-                // Mostra o loader no botão
-                submitButtonText.classList.add('hidden');
-                submitLoader.classList.remove('hidden');
-                submitButton.disabled = true;
-
-                let score = 0;
-                let categoryScores = {};
-                let urgentActions = [];
-                let answersData = {}; // Para o Google Sheet
-
-                questionData.forEach(section => {
-                    const sectionTitle = section.title.split(': ')[1] || section.title; // Pega o título da seção
-                    let sectionScore = 0;
-                    let sectionMaxScore = 0;
-
-                    section.questions.forEach(q => {
-                        const questionOptions = q.options || standardOptions;
-                        const maxOptionValue = questionOptions[questionOptions.length - 1].value;
-                        const answer = form.querySelector(`input[name="${q.id}"]:checked`);
-                        const answerValue = parseInt(answer.value, 10);
-                        const weightedScore = answerValue * q.weight;
-                        
-                        score += weightedScore;
-                        sectionScore += weightedScore;
-                        sectionMaxScore += maxOptionValue * q.weight;
-                        
-                        if (q.urgentIf.includes(answerValue)) {
-                            urgentActions.push(q.text); 
-                        }
-                        
-                        const optionLabel = questionOptions.find(opt => opt.value === answerValue).label;
-                        answersData[q.id] = optionLabel;
-                    });
-                    
-                    categoryScores[sectionTitle] = (sectionScore / sectionMaxScore) * 100; // Porcentagem
-                });
-
-                const scorePercentage = Math.round((score / totalMaxScore) * 100);
-                const { level, description, color } = getMaturityLevel(scorePercentage);
-                const companyName = companyNameInput.value.trim();
-                const contactName = contactNameInput.value.trim();
-                const contactEmail = contactEmailInput.value.trim();
-
-                const results = {
-                    companyName,
-                    contactName,
-                    contactEmail,
-                    scorePercentage,
-                    level,
-                    description,
-                    color,
-                    categoryScores,
-                    urgentActions,
-                    answersData
-                };
-
-                // Simula um delay para o loader e processamento
-                setTimeout(() => {
-                    displayResults(results);
-                    sendDataToGoogleSheet(results); 
-                    
-                    submitButtonText.classList.remove('hidden');
-                    submitLoader.classList.add('hidden');
-                    submitButton.disabled = false;
-                }, 500);
-            }
-            
-            // Função para definir o nível de maturidade
-            function getMaturityLevel(percentage) {
-                if (percentage <= 25) {
-                    return { level: "Inicial", description: "Sua empresa possui controles de tecnologia e segurança muito básicos ou inexistentes. Alto risco.", color: "bg-red-600" };
-                } else if (percentage <= 50) {
-                    return { level: "Em Desenvolvimento", description: "Alguns controles existem, mas são inconsistentes. É preciso estruturar os processos.", color: "bg-yellow-500" };
-                } else if (percentage <= 75) {
-                    return { level: "Definido", description: "Bons controles estão implementados. O foco agora é na melhoria contínua e em cobrir lacunas.", color: "bg-blue-600" };
-                } else {
-                    return { level: "Avançado", description: "Sua empresa leva a sério a tecnologia e segurança, com processos claros e maduros.", color: "bg-green-600" };
-                }
-            }
-
-            // Função para exibir os resultados
-            function displayResults(results) {
-                form.classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // Pontuação e Identificação
-                totalScoreElem.textContent = results.scorePercentage;
-                scoreBadge.className = `w-48 h-48 rounded-full flex items-center justify-center text-white text-6xl font-bold transition-all duration-500 ${results.color}`;
-                maturityLevelText.textContent = results.level;
-                maturityDescription.textContent = results.description;
-                companyNameResult.textContent = results.companyName;
-                contactNameResult.textContent = results.contactName;
-                contactEmailResult.textContent = results.contactEmail;
-
-                // Ações Urgentes
-                urgentActionsList.innerHTML = ""; // Limpa
-                if (results.urgentActions.length > 0) {
-                    noUrgentActions.classList.add('hidden');
-                    results.urgentActions.forEach(actionText => {
-                        const li = document.createElement('li');
-                        li.className = "flex items-start text-lg text-gray-700";
-                        li.innerHTML = `
-                            <span class="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3 mt-1">
-                                <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.33-.266 3.03-1.742 3.03H4.42C2.944 16.05 1.93 14.35 2.68 13.02l5.577-9.92zM10 13a1 1 0 100-2 1 1 0 000 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
-                            </span>
-                            <span>${actionText}</span>
-                        `;
-                        urgentActionsList.appendChild(li);
-                    });
-                } else {
-                    noUrgentActions.classList.add('hidden');
-                }
-
-                // Gráfico Radar
-                const ctx = document.getElementById('radar-chart').getContext('2d');
-                if (radarChart) {
-                    radarChart.destroy();
-                }
-                radarChart = new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: Object.keys(results.categoryScores),
-                        datasets: [{
-                            label: 'Pontuação por Área (%)',
-                            data: Object.values(results.categoryScores),
-                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                            pointBorderColor: '#fff',
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        // CORREÇÃO: Desabilita animações para corrigir o bug do PDF
-                        animation: {
-                            duration: 0
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                max: 100,
-                                angleLines: { color: '#ddd' },
-                                grid: { color: '#e0e0e0' },
-                                pointLabels: {
-                                    font: { size: 13, weight: '500' },
-                                    color: '#333'
-                                },
-                                ticks: {
-                                    backdropColor: '#f8f8f8',
-                                    color: '#555'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Função para resetar o formulário
-            function resetForm() {
-                form.reset();
-                form.classList.remove('hidden');
-                resultsContainer.classList.add('hidden');
-                
-                // Limpa erros de validação
-                validationError.classList.add('hidden');
-                companyNameError.classList.add('hidden');
-                contactNameError.classList.add('hidden');
-                contactEmailError.classList.add('hidden');
-                companyNameInput.classList.remove('validation-error');
-                contactNameInput.classList.remove('validation-error');
-                contactEmailInput.classList.remove('validation-error');
-                document.querySelectorAll('fieldset').forEach(fs => fs.classList.remove('validation-error'));
-                
-                if (radarChart) {
-                    radarChart.destroy();
-                    radarChart = null;
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
-            // MODIFICADO: Função reescrita para baixar como PNG
-            function downloadResultsAsImage() {
-                const element = document.getElementById('pdf-content');
-                const companyName = companyNameInput.value.trim().replace(/\s+/g, '_') || 'Diagnostico';
-                const date = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-                const fileName = `Diagnostico_Maturidade_${companyName}_${date}.png`;
-
-                // Usa a biblioteca htmlToImage
-                htmlToImage.toPng(element, { 
-                    quality: 0.98, // Qualidade da imagem
-                    backgroundColor: '#f3f4f6' // Cor de fundo (cinza claro do body)
-                })
-                .then(function (dataUrl) {
-                    // Cria um link temporário para o download
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = dataUrl;
-                    link.click();
-                })
-                .catch(function (error) {
-                    console.error('Ops, algo deu errado ao gerar a imagem!', error);
-                });
-            };
-
-            // Função para enviar dados para o Google Apps Script
-            function sendDataToGoogleSheet(results) {
-                if (!SCRIPT_URL || SCRIPT_URL.trim() === "") {
-                    console.warn("SCRIPT_URL não está definida. Pulando envio para Planilha Google.");
+            const calculateResults = () => {
+                validationMessage.classList.add('hidden');
+                if (!form.checkValidity() || !companyNameInput.value) {
+                    validationMessage.textContent = 'Por favor, preencha o nome da empresa e responda a todas as perguntas.';
+                    validationMessage.classList.remove('hidden');
                     return;
                 }
 
-                // Payload agora inclui os campos de contato, conforme esperado pelo script v4
-                const payload = {
-                    companyName: results.companyName,
-                    contactName: results.contactName,
-                    contactEmail: results.contactEmail,
-                    totalScore: results.scorePercentage,
-                    maturityLevel: results.level,
-                    // Constrói um array com as 35 respostas em ordem
-                    answers: questionData.flatMap(section => 
-                        section.questions.map(q => results.answersData[q.id] || "")
-                    )
-                };
+                let totalScore = 0;
+                const themeScores = {};
+                const urgentIssuesList = [];
 
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => { // CORRIGIDO: Removido o 'M' que estava aqui
-                    console.log("Dados enviados para a Planilha Google.");
-                })
-                .catch(error => {
-                    console.error("Erro ao enviar dados para a Planilha Google:", error);
+                questions.forEach(q => {
+                    const selected = form.querySelector(`input[name="question_${q.id}"]:checked`);
+                    if (selected) {
+                        const value = parseInt(selected.value);
+                        totalScore += value;
+                        if (!themeScores[q.theme]) {
+                            themeScores[q.theme] = { score: 0, maxScore: 0 };
+                        }
+                        themeScores[q.theme].score += value;
+                        themeScores[q.theme].maxScore += 4;
+                        if (value === 0) {
+                            urgentIssuesList.push(q.urgency_tip);
+                        }
+                    }
                 });
-            }
 
-            // Adiciona os event listeners aos botões
+                displayResults(totalScore, themeScores, urgentIssuesList);
+            };
+
+            const displayResults = (score, themes, issues) => {
+                questionnaireSection.classList.add('hidden');
+                resultsSectionWrapper.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                document.getElementById('resultCompanyName').textContent = companyNameInput.value;
+                document.getElementById('totalScore').textContent = `${score}/${maxTotalScore}`;
+                
+                const percentage = (score / maxTotalScore) * 100;
+                const scoreBar = document.getElementById('scoreBar');
+                setTimeout(() => { scoreBar.style.width = `${percentage}%`; }, 100);
+
+                const maturityLevelEl = document.getElementById('maturityLevel');
+                let levelText, levelColorClasses;
+                if (percentage <= 25) {
+                    [levelText, levelColorClasses] = ['Nível Inicial', 'bg-red-100 text-red-800'];
+                } else if (percentage <= 50) {
+                    [levelText, levelColorClasses] = ['Em Desenvolvimento', 'bg-amber-100 text-amber-800'];
+                } else if (percentage <= 75) {
+                    [levelText, levelColorClasses] = ['Nível Maduro', 'bg-sky-100 text-sky-800'];
+                } else {
+                    [levelText, levelColorClasses] = ['Nível Avançado', 'bg-green-100 text-green-800'];
+                }
+                maturityLevelEl.textContent = levelText;
+                maturityLevelEl.className = `inline-block px-4 py-1 text-sm font-bold rounded-full transition-all ${levelColorClasses}`;
+
+                const urgentIssuesContainer = document.getElementById('urgentIssues');
+                urgentIssuesContainer.innerHTML = '';
+                if (issues.length > 0) {
+                    issues.forEach(issue => {
+                        const li = document.createElement('li');
+                        li.className = 'bg-slate-50 p-3 rounded-lg flex items-start';
+                        li.innerHTML = `<div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><span>${issue}</span>`;
+                        urgentIssuesContainer.appendChild(li);
+                    });
+                } else {
+                     urgentIssuesContainer.innerHTML = `<li class="text-green-600 font-semibold bg-green-50 p-3 rounded-lg flex items-center justify-center">Parabéns! Nenhum ponto crítico de alta urgência foi identificado. Continue mantendo as boas práticas!</li>`;
+                }
+
+                const ctx = document.getElementById('maturityChart').getContext('2d');
+                const themeLabels = Object.keys(themes);
+                const themeData = themeLabels.map(label => (themes[label].score / themes[label].maxScore) * 100);
+                
+                if(maturityChart) { maturityChart.destroy(); }
+
+                maturityChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: themeLabels.map(l => l.replace(' (LGPD)', '')),
+                        datasets: [{
+                            label: 'Maturidade (%)',
+                            data: themeData,
+                            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                            borderColor: 'rgb(79, 70, 229)',
+                            pointBackgroundColor: 'rgb(79, 70, 229)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(79, 70, 229)'
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: true,
+                        scales: {
+                            r: {
+                                suggestedMin: 0, suggestedMax: 100,
+                                pointLabels: { font: { size: 11 } },
+                                ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)', stepSize: 25 }
+                            }
+                        },
+                        plugins: { legend: { position: 'top' } }
+                    }
+                });
+            };
+
+            const resetForm = () => {
+                form.reset();
+                companyNameInput.value = '';
+                resultsSectionWrapper.classList.add('hidden');
+                questionnaireSection.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const downloadResultsAsPDF = () => {
+                const element = document.getElementById('resultsSection');
+                const companyName = companyNameInput.value || 'Empresa';
+                const filename = `Diagnostico_Maturidade_${companyName.replace(/\s+/g, '_')}.pdf`;
+
+                const opt = {
+                    margin:       [0.3, 0.3, 0.3, 0.3],
+                    filename:     filename,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                
+                html2pdf().from(element).set(opt).save();
+            };
+
             submitButton.addEventListener('click', calculateResults);
             redoButton.addEventListener('click', resetForm);
-            // MODIFICADO: O listener agora está no botão de imagem
-            downloadImageButton.addEventListener('click', downloadResultsAsImage);
-            
-            // Inicia o aplicativo injetando as perguntas
-            injectQuestions();
+            downloadPdfButton.addEventListener('click', downloadResultsAsPDF);
         });
     </script>
 </body>
